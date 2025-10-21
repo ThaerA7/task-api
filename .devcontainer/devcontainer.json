@@ -1,0 +1,19 @@
+{
+  "name": "Java 25 + Docker",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "installMaven": "true",
+      "installGradle": "false",
+      "jdkDistro": "ms"
+    }
+  },
+  "forwardPorts": [8080, 5432],
+  "portsAttributes": {
+    "8080": { "label": "API" },
+    "5432": { "label": "Postgres" }
+  },
+  "postCreateCommand": "java -version && mvn -v && docker --version && docker compose version"
+}
