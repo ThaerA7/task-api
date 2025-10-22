@@ -17,16 +17,21 @@ public class SecurityConfig {
   @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
   @Bean
-  SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwt) throws Exception {
-    return http
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/ping", "/api/auth/**",
-                             "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
-        .build();
-  }
+SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwt) throws Exception {
+  return http
+      .csrf(csrf -> csrf.disable())
+      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .exceptionHandling(e -> e
+        .authenticationEntryPoint((req, res, ex) -> res.sendError(401))  // unauthenticated -> 401
+        .accessDeniedHandler((req, res, ex) -> res.sendError(403))       // forbidden -> 403
+      )
+      .authorizeHttpRequests(auth -> auth
+          .requestMatchers("/ping", "/api/auth/**",
+                           "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+          .anyRequest().authenticated()
+      )
+      .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
+      .build();
+}
+
 }

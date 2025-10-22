@@ -1,9 +1,11 @@
 package com.example.tasks.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIgnoreProperties({"password", "roles"})
 @Entity
 @Table(name = "users")
 public class AppUser {
@@ -20,10 +22,11 @@ public class AppUser {
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "user_roles",
-    joinColumns = @JoinColumn(name = "user_id"),
-    inverseJoinColumns = @JoinColumn(name = "role_id"))
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
+  // getters/setters
   public Long getId() { return id; }
   public String getUsername() { return username; }
   public void setUsername(String username) { this.username = username; }

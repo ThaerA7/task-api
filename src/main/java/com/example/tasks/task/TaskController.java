@@ -1,11 +1,14 @@
 package com.example.tasks.task;
-
+import org.springframework.web.bind.annotation.RequestParam;
+import com.example.tasks.user.AppUserRepository;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,7 +17,21 @@ import org.springframework.web.server.ResponseStatusException;
 public class TaskController {
 
   private final TaskRepository repo;
-  public TaskController(TaskRepository repo){ this.repo = repo; }
+  private final AppUserRepository users;
+
+  public TaskController(TaskRepository repo, AppUserRepository users) {
+    this.repo = repo; this.users = users;
+  }
+
+  private Long meId() {
+    var username = SecurityContextHolder.getContext().getAuthentication().getName();
+    return users.findByUsername(username).orElseThrow().getId();
+  }
+
+  private boolean isAdmin() {
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+  }
 
   @GetMapping
   public Page<Task> list(
@@ -22,27 +39,35 @@ public class TaskController {
       @RequestParam(required = false) TaskStatus status,
       @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
 
-    var spec = Specification.where(TaskSpecifications.textContains(q))
-                            .and(TaskSpecifications.hasStatus(status));
+    var spec = Specification.where(TaskSpecifications.ownedBy(meId()))
+        .and(TaskSpecifications.textContains(q))
+        .and(TaskSpecifications.hasStatus(status));
 
     return repo.findAll(spec, pageable);
   }
 
   @GetMapping("/{id}")
-  public Task get(@PathVariable Long id){
-    return repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  public Task get(@PathVariable Long id) {
+    var t = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!isAdmin() && !t.getOwner().getId().equals(meId()))
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    return t;
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Task create(@RequestBody @Valid Task incoming){
+  public Task create(@RequestBody @Valid Task incoming) {
     incoming.setId(null);
+    incoming.setOwner(users.findById(meId()).orElseThrow());
     return repo.save(incoming);
   }
 
   @PutMapping("/{id}")
-  public Task update(@PathVariable Long id, @RequestBody @Valid Task incoming){
+  public Task update(@PathVariable Long id, @RequestBody @Valid Task incoming) {
     var t = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!isAdmin() && !t.getOwner().getId().equals(meId()))
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
     t.setTitle(incoming.getTitle());
     t.setDescription(incoming.getDescription());
     t.setStatus(incoming.getStatus());
@@ -52,8 +77,17 @@ public class TaskController {
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void delete(@PathVariable Long id){
-    if (!repo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    repo.deleteById(id);
+  public void delete(@PathVariable Long id) {
+    var t = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!isAdmin() && !t.getOwner().getId().equals(meId()))
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    repo.delete(t);
+  }
+
+  // Admin can view everyone's tasks
+  @PreAuthorize("hasRole('ADMIN')")
+  @GetMapping("/admin/all")
+  public Page<Task> all(@PageableDefault(size = 50, sort = "createdAt") Pageable pageable) {
+    return repo.findAll(pageable);
   }
 }

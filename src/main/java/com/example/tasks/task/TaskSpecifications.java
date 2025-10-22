@@ -14,9 +14,13 @@ public class TaskSpecifications {
       if (q == null || q.isBlank()) return cb.conjunction();
       var like = "%" + q.toLowerCase() + "%";
       return cb.or(
-        cb.like(cb.lower(root.get("title")), like),
-        cb.like(cb.lower(root.get("description")), like)
+          cb.like(cb.lower(root.get("title")), like),
+          cb.like(cb.lower(root.get("description")), like)
       );
     };
+  }
+
+  public static Specification<Task> ownedBy(Long userId) {
+    return (root, query, cb) -> cb.equal(root.get("owner").get("id"), userId);
   }
 }
