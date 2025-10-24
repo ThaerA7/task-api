@@ -32,7 +32,7 @@ public abstract class AbstractIntegrationTest {
           "spring.datasource.url=" + POSTGRES.getJdbcUrl(),
           "spring.datasource.username=" + POSTGRES.getUsername(),
           "spring.datasource.password=" + POSTGRES.getPassword(),
-          "spring.jpa.hibernate.ddl-auto=update",
+          "spring.jpa.hibernate.ddl-auto=create-drop"
           "JWT_SECRET=test-secret-for-it-should-be-long-enough-0123456789"
       ).applyTo(context.getEnvironment());
     }
