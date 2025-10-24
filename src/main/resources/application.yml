@@ -2,6 +2,10 @@ server:
   port: 8080
   forward-headers-strategy: framework
 
+spring:
+  jpa:
+    open-in-view: false
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -10,7 +14,9 @@ springdoc:
 
 ---
 spring:
-  config.activate.on-profile: docker
+  config:
+    activate:
+      on-profile: docker
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}

@@ -27,7 +27,7 @@ public class AuthController {
   }
 
 record RegisterReq(@NotBlank String username, @NotBlank String password, boolean admin) {}
-record LoginReq(@NotBlank String username, @NotBlank String password) {}   // ← add this
+record LoginReq(@NotBlank String username, @NotBlank String password) {} 
 record AuthResp(String token) {}
 
 @PostMapping("/register")

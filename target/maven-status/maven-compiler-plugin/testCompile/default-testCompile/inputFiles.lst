@@ -1,0 +1,3 @@
+/workspaces/task-api/src/test/java/com/example/tasks/api/AuthAndTaskFlowTest.java
+/workspaces/task-api/src/test/java/com/example/tasks/it/AbstractIntegrationTest.java
+/workspaces/task-api/src/test/java/com/example/tasks/task/TaskRepositoryTest.java

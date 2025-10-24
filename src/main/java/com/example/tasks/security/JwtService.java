@@ -17,7 +17,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-  @Value("${JWT_SECRET}")
+ @Value("${JWT_SECRET:local-dev-secret-please-change-this-very-long-1234567890}")
   private String secret;
 
   private SecretKey key;

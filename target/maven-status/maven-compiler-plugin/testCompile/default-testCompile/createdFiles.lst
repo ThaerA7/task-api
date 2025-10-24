@@ -1,0 +1,4 @@
+com/example/tasks/api/AuthAndTaskFlowTest.class
+com/example/tasks/it/AbstractIntegrationTest$DockerPostgresInitializer.class
+com/example/tasks/it/AbstractIntegrationTest.class
+com/example/tasks/task/TaskRepositoryTest.class
