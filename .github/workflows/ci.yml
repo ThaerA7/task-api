@@ -15,7 +15,7 @@ jobs:
       - name: Run tests (unit + integration)
         run: mvn -B -ntp clean test
 
-  docker:
+    docker:
     needs: build-test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -25,13 +25,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - name: Image name
-        run: echo "IMAGE=ghcr.io/${{ github.repository_owner }}/task-api" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
+
+      - name: Set image name (lowercase owner only)
+        run: |
+          OWNER_LC=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE=ghcr.io/${OWNER_LC}/task-api" >> "$GITHUB_ENV"
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: docker/build-push-action@v6
         with:
           context: .
